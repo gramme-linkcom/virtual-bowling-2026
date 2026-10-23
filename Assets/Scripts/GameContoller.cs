@@ -1077,7 +1077,11 @@ public class GameContoller : MonoBehaviour
 
         ball = Instantiate(ballPrefab, spawn, Quaternion.identity);
         ballRb = ball.GetComponent<Rigidbody>();
-        ballRb.AddForce(vector);
+        // AddForce (ForceMode.Force) は「力 × 物理の1コマの時間」だけ速度が付くので、
+        // Fixed Timestep を変えると投げる速さまで変わってしまう。元の 0.02 秒のときと同じ速さになるよう、
+        // 一瞬で加える力 (Impulse) に置き換える (2026 修正)。
+        const float kLegacyFixedTimestep = 0.02f;
+        ballRb.AddForce(vector * kLegacyFixedTimestep, ForceMode.Impulse);
 
         soundManager.PlayThrowBallSE();
         soundManager.PlayBallRollSE(ball.GetComponent<AudioSource>());
