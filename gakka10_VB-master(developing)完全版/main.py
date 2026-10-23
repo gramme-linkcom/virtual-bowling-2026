@@ -1,0 +1,56 @@
+import sys
+import time
+from motion import Motion
+from constant import MODE_3D
+from constant import FILE_PATH
+from constant import LANE_WIDTH
+
+from constant import CAMERA_WIDTH
+from camera import StereoCamera
+from camera import NormalCamera
+
+def calcBallMotionForUnity(motion):
+    p  = motion.position / CAMERA_WIDTH * LANE_WIDTH
+    v_x = motion.velocity[0] / CAMERA_WIDTH * LANE_WIDTH
+    v_y = motion.velocity[1] / CAMERA_WIDTH * LANE_WIDTH * 1.2
+
+    return Motion(p, (v_x, v_y))
+
+print('[System] カメラ ID を入力してください')
+sys.stdout.write('（よくわからない場合エンターを押してください）: ')
+try:
+
+
+
+    camera_id = int(input())
+except:
+
+    
+    camera_id = 0
+
+cam = StereoCamera(camera_id) if MODE_3D is True else NormalCamera(camera_id)
+print('[System] ボールを画面上に入れて、半径を取得してください')
+ball = cam.detectBallProperty()
+while True:
+    print('[System] 計測モードに入ります。ボールを投げてください。')
+    motion = cam.detectBallMotion(ball)
+    if motion == -1:
+        continue
+
+
+    motionForUnity = calcBallMotionForUnity(motion)
+    print('[System] 計測完了！')
+    print('[System] 初期位置: ' + str(motionForUnity.position))
+    print('[System] 速度: ' + str(motionForUnity.velocity))
+
+    file = open("vector.txt", 'w')
+    file.write(str(motionForUnity.position)+ "\n" +
+               str(motionForUnity.velocity[0]) + "\n" +
+               str(motionForUnity.velocity[1]))
+    file.close()
+    print('[System] vector.txtに計測結果を記録しました。')
+    # 計測後10秒delay
+    # time.sleep(8.0)
+
+
+

@@ -1,0 +1,7 @@
+opencv-python>=4.5.5
+numpy>=1.21
+
+# Notes:
+# - This project uses OpenCV for video capture and image processing (cv2).
+# - If you need the contrib modules (unlikely for this project), install opencv-contrib-python instead.
+# - Pin versions if you require strict reproducibility.
