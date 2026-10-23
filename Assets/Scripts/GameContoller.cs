@@ -77,6 +77,8 @@ public class GameContoller : MonoBehaviour
         Playing
     }
     private GameStatus state;
+    // Web UI (RemoteControl.cs) に今の状態を伝える (2026 追加)
+    public string CurrentStateName => state.ToString();
 
     private enum SplitMode
     {
@@ -108,6 +110,8 @@ public class GameContoller : MonoBehaviour
     // ガーターの3Dオブジェクトを格納する変数です。
     [SerializeField] private GameObject[] Gutters;
     private bool IsGutterEasy = false;
+    // ガーターの壁が上がっているか (RemoteControl.cs から読む。2026 追加)
+    public bool IsGutterWallUp => IsGutterEasy;
 
     private void Start()
     {
@@ -144,7 +148,7 @@ public class GameContoller : MonoBehaviour
     {
         if (state == GameStatus.StartMenu)
         {
-            if ((Input.GetKeyDown(KeyCode.Space) || shouldSkipStartMenu) && showStartMenu || JoyconController.AButtonR())
+            if ((RemoteInput.GetKeyDown(KeyCode.Space) || shouldSkipStartMenu) && showStartMenu || JoyconController.AButtonR())
             {
                 TransferPlayMode();
                 shouldSkipStartMenu = false;
@@ -235,7 +239,7 @@ public class GameContoller : MonoBehaviour
         }
 
         // Gを押下でガターが高くなって壁になる
-        if (Input.GetKeyDown(KeyCode.G))
+        if (RemoteInput.GetKeyDown(KeyCode.G))
         {
             Vector3 EasyGutterScale = new Vector3(1.0f, 1.0f, 3.0f);
             Vector3 DefGutterScale = new Vector3(1.0f, 1.0f, 1.0f);
@@ -260,7 +264,7 @@ public class GameContoller : MonoBehaviour
         {
             //SceneManager.LoadScene(1);
         }
-        else if (Input.GetKeyDown(KeyCode.Escape)) // 1投目に移行
+        else if (RemoteInput.GetKeyDown(KeyCode.Escape)) // 1投目に移行
         {
             SceneManager.sceneLoaded += OnReloadSceneAndTransferPlayMode;
             SceneManager.LoadScene(1);

@@ -68,7 +68,7 @@ public class MenuController : MonoBehaviour
         if (time[0] > 0.5f)
         {
 
-            if (Input.GetKeyDown(KeyCode.LeftArrow) || JoyconController.Rstick() < -0.3)
+            if (RemoteInput.GetKeyDown(KeyCode.LeftArrow) || JoyconController.Rstick() < -0.3)
             {
                 AudioSource.PlayOneShot(sound1);
                 time[0] = 0;
@@ -80,7 +80,7 @@ public class MenuController : MonoBehaviour
                 TextChange();
             }
 
-            if (Input.GetKeyDown(KeyCode.RightArrow) || JoyconController.Rstick() > 0.3)
+            if (RemoteInput.GetKeyDown(KeyCode.RightArrow) || JoyconController.Rstick() > 0.3)
             {
                 AudioSource.PlayOneShot(sound1);
                 time[0] = 0;
@@ -93,7 +93,7 @@ public class MenuController : MonoBehaviour
             }
 
             //スペースキーでゲーム画面へ
-            if ((Input.GetKeyDown(KeyCode.Space) || JoyconController.AButtonR()) && !one)
+            if ((RemoteInput.GetKeyDown(KeyCode.Space) || JoyconController.AButtonR()) && !one)
             {
                 LoadText.rectTransform.localScale = new Vector3(1, 1, 1);
                 AudioSource.PlayOneShot(sound1);
