@@ -980,6 +980,7 @@ public class GameContoller : MonoBehaviour
                     mainPinRigidbodyList.Add(pre_pin.GetComponent<Rigidbody>());
                 }
             }
+            SleepAllPins(pinsObjectsArray);
             uiController.ResetInformationPins();
         }
         if (gameMode == GameMode.Pins105)
@@ -1013,6 +1014,25 @@ public class GameContoller : MonoBehaviour
                     Pins105TransformList.Add(pre_pin.transform);
                     Pins105RigidbodyList.Add(pre_pin.GetComponent<Rigidbody>());
                 }
+            }
+            SleepAllPins(pinsObjectsSPArray);
+        }
+    }
+
+    // 置いた直後のピンを眠らせる (2026 追加)。
+    // 床との小さなめり込みや段差で、ボールが当たる前にピンが傾いて倒れるのを防ぐ。
+    // 眠ったピンはボールや他のピンが当たると自動で起きるので、倒れ方には影響しない。
+    private void SleepAllPins(GameObject[] pinSets)
+    {
+        if (pinSets == null) return;
+        foreach (GameObject pinSet in pinSets)
+        {
+            if (pinSet == null) continue;
+            foreach (Rigidbody rb in pinSet.GetComponentsInChildren<Rigidbody>())
+            {
+                rb.velocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+                rb.Sleep();
             }
         }
     }
