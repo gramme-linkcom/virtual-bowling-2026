@@ -112,6 +112,8 @@ public class GameContoller : MonoBehaviour
     private bool IsGutterEasy = false;
     // ガーターの壁が上がっているか (RemoteControl.cs から読む。2026 追加)
     public bool IsGutterWallUp => IsGutterEasy;
+    // ハイスコアの名前入力に実際に使っている入力欄 (RemoteControl.cs から使う。2026 追加)
+    public InputName NameInput => inputName;
 
     private void Start()
     {

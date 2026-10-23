@@ -69,7 +69,7 @@ public class RemoteControl : MonoBehaviour
             url += "&gutter=" + (game.IsGutterWallUp ? "1" : "0");
             url += "&score=" + game.Pins105AllCount;
         }
-        url += "&name_input=" + (IsWaitingName() ? "1" : "0");
+        url += "&name_input=" + (IsWaitingName(game) ? "1" : "0");
 
         using (UnityWebRequest req = UnityWebRequest.Get(url))
         {
@@ -86,18 +86,25 @@ public class RemoteControl : MonoBehaviour
         }
     }
 
-    // ハイスコアの名前入力欄が出ているか
-    private static bool IsWaitingName()
+    // ハイスコアの名前入力欄が出ているか。
+    // シーンには InputName が2つある (UIController にも付いている) ので、
+    // GameContoller が実際に表示・非表示している方を見る。
+    private static InputName GetNameInput(GameContoller game)
     {
-        InputName input = InputName.Instance;
+        return game != null ? game.NameInput : null;
+    }
+
+    private static bool IsWaitingName(GameContoller game)
+    {
+        InputName input = GetNameInput(game);
         return input != null && input.Field != null && input.Field.gameObject.activeInHierarchy;
     }
 
     // Web UI で入れた名前を、キーボードで入力して OK を押したのと同じように反映する
-    private static void SubmitName(string name)
+    private static void SubmitName(string name, GameContoller game)
     {
-        if (!IsWaitingName()) return;
-        InputName input = InputName.Instance;
+        if (!IsWaitingName(game)) return;
+        InputName input = GetNameInput(game);
         if (input.Field.characterLimit > 0 && name.Length > input.Field.characterLimit)
         {
             name = name.Substring(0, input.Field.characterLimit);
@@ -126,7 +133,7 @@ public class RemoteControl : MonoBehaviour
     {
         if (cmd.StartsWith("name:"))
         {
-            SubmitName(cmd.Substring("name:".Length));
+            SubmitName(cmd.Substring("name:".Length), game);
             return;
         }
         switch (cmd)
