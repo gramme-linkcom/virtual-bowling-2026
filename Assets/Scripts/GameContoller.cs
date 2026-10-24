@@ -115,6 +115,19 @@ public class GameContoller : MonoBehaviour
     // ハイスコアの名前入力に実際に使っている入力欄 (RemoteControl.cs から使う。2026 追加)
     public InputName NameInput => inputName;
 
+    // ---- カメラで取った投げ始めの横位置を、ボールを出す位置に使う (2026 追加) ----
+    // vector.txt の1行目 (投げ始めの横位置 [m]、ツールの --lane-width 基準) を使う。
+    // 動きがおかしいときは useThrowPosition のチェックを外せば、元の動き (毎回レーンの真ん中から) に戻る。
+    // ツールにつながっている間は、管理画面 (Web UI) の「ボールを出す位置」「左右反転」が優先される (再ビルド不要)。
+    [Header("カメラの投げ始めの位置を使う (2026 追加)")]
+    [SerializeField] private bool useThrowPosition = true;
+    [SerializeField] private float toolLaneWidth = 5f;      // ツールの --lane-width (既定 5m)
+    [SerializeField] private float laneHalfWidth = 0.48f;   // Unity のレーン幅の半分 (端のピンが ±0.42)
+    [SerializeField] private float maxSpawnOffset = 0.36f;  // 真ん中からこれ以上はずらさない (溝に落ちないように)
+    [SerializeField] private bool invertThrowPosition = false;  // 左右が逆になるときにチェック
+    private float pendingSpawnOffset = 0f;  // 次に投げるボールの横ずれ
+    private float lastSpawnOffset = 0f;     // リプレイ用
+
     private void Start()
     {
         mainCamera = Camera.main;
@@ -684,6 +697,18 @@ public class GameContoller : MonoBehaviour
             float z = float.Parse(vec_str[2]); // side
 
             Vector3 read_vec = new Vector3(z * 200, x * -40, y * -40);
+            // 管理画面の設定が届いていればそれを、届いていなければ Inspector の設定を使う
+            bool usePosition = RemoteControl.PositionMode >= 0 ? RemoteControl.PositionMode == 1 : useThrowPosition;
+            bool invertPosition = RemoteControl.PositionInvert >= 0 ? RemoteControl.PositionInvert == 1 : invertThrowPosition;
+            if (usePosition && toolLaneWidth > 0f)
+            {
+                // 1行目は「投げ始めの横位置」。上下の力ではなく、ボールを出す位置の横ずれに使う。
+                // 向きは2行目 (横方向の速度 → z * -40) と同じ (+ が -z 側)。
+                float offset = -x / (toolLaneWidth / 2f) * laneHalfWidth;
+                if (invertPosition) offset = -offset;
+                pendingSpawnOffset = Mathf.Clamp(offset, -maxSpawnOffset, maxSpawnOffset);
+                read_vec.y = 0f;
+            }
             ThrowBall(read_vec);
         }
     }
@@ -1080,6 +1105,12 @@ public class GameContoller : MonoBehaviour
             prePinStatus = new bool[100];
         }
         pinStatus.CopyTo(prePinStatus, 0);
+
+        // カメラで取った投げ始めの位置の分だけ、ボールを出す位置を横にずらす (2026 追加)
+        float spawnOffset = isReplaying ? lastSpawnOffset : pendingSpawnOffset;
+        pendingSpawnOffset = 0f;
+        lastSpawnOffset = spawnOffset;
+        spawn.z += spawnOffset;
 
         ball = Instantiate(ballPrefab, spawn, Quaternion.identity);
         ballRb = ball.GetComponent<Rigidbody>();

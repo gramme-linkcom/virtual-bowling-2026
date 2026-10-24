@@ -45,7 +45,14 @@ public class RemoteControl : MonoBehaviour
     {
         public string[] commands;
         public bool paused;  // 管理画面の「休止」ボタン
+        // ボールを出す位置 (管理画面の「Unity 連携」)。古いツールで項目が無いときは -1 のまま。
+        public int position_mode = -1;    // 1: カメラで取った位置 / 0: いつも真ん中
+        public int position_invert = -1;  // 1: 左右反転
     }
+
+    // 管理画面の「ボールを出す位置」の設定。-1 はツールから届いていない (GameContoller の Inspector の値を使う)。
+    public static int PositionMode = -1;
+    public static int PositionInvert = -1;
 
     // 休止中 (管理画面の「休止」ボタン)。画面全体に「休止中」を出す。
     private static bool isPaused;
@@ -83,7 +90,12 @@ public class RemoteControl : MonoBehaviour
             if (req.result != UnityWebRequest.Result.Success)
             {
                 // ツールが動いていない。しばらくつながらなければ休止の表示も消す (出しっぱなしにしない)
-                if (++failCount >= 5) isPaused = false;
+                if (++failCount >= 5)
+                {
+                    isPaused = false;
+                    PositionMode = -1;  // ツールが止まったら Inspector の設定に戻す
+                    PositionInvert = -1;
+                }
                 yield break;
             }
             failCount = 0;
@@ -91,6 +103,8 @@ public class RemoteControl : MonoBehaviour
             PollResponse res = JsonUtility.FromJson<PollResponse>(req.downloadHandler.text);
             if (res == null) yield break;
             isPaused = res.paused;
+            PositionMode = res.position_mode;
+            PositionInvert = res.position_invert;
             if (res.commands == null) yield break;
             foreach (string cmd in res.commands)
             {
