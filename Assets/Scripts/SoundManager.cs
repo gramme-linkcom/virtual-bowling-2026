@@ -56,9 +56,38 @@ public class SoundManager : MonoBehaviour
         audioSource.PlayOneShot(kansei_SE);
     }
 
+    // BGM は効果音と別の AudioSource で鳴らし、ループ再生する (2026 追加)。
+    // 以前は効果音と同じ AudioSource の PlayOneShot だったので、曲が終わると無音になっていた。
+    [SerializeField] private bool loopBGM = true;
+    [SerializeField, Range(0f, 1f)] private float bgmVolume = 1f;
+    private AudioSource bgmSource;
+
     internal void Morning_BGM()
     {
-        audioSource.PlayOneShot(morning_BGM);
+        PlayBGM(morning_BGM);
+    }
+
+    internal void PlayBGM(AudioClip clip)
+    {
+        if (clip == null) return;
+        if (bgmSource == null)
+        {
+            bgmSource = gameObject.AddComponent<AudioSource>();
+            bgmSource.playOnAwake = false;
+            bgmSource.spatialBlend = 0f;
+            if (audioSource != null) bgmSource.outputAudioMixerGroup = audioSource.outputAudioMixerGroup;
+        }
+        bgmSource.loop = loopBGM;
+        bgmSource.volume = bgmVolume * (audioSource != null ? audioSource.volume : 1f);
+        // 同じ曲が流れているときは最初からにしない
+        if (bgmSource.isPlaying && bgmSource.clip == clip) return;
+        bgmSource.clip = clip;
+        bgmSource.Play();
+    }
+
+    internal void StopBGM()
+    {
+        if (bgmSource != null) bgmSource.Stop();
     }
 
     internal void Yeah_SE()

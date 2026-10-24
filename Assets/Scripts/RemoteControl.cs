@@ -44,7 +44,12 @@ public class RemoteControl : MonoBehaviour
     private class PollResponse
     {
         public string[] commands;
+        public bool paused;  // 管理画面の「休止」ボタン
     }
+
+    // 休止中 (管理画面の「休止」ボタン)。画面全体に「休止中」を出す。
+    private static bool isPaused;
+    private int failCount;  // ツールに続けてつながらなかった回数
 
     private IEnumerator Start()
     {
@@ -75,10 +80,18 @@ public class RemoteControl : MonoBehaviour
         {
             req.timeout = 1;
             yield return req.SendWebRequest();
-            if (req.result != UnityWebRequest.Result.Success) yield break;  // ツールが動いていない
+            if (req.result != UnityWebRequest.Result.Success)
+            {
+                // ツールが動いていない。しばらくつながらなければ休止の表示も消す (出しっぱなしにしない)
+                if (++failCount >= 5) isPaused = false;
+                yield break;
+            }
+            failCount = 0;
 
             PollResponse res = JsonUtility.FromJson<PollResponse>(req.downloadHandler.text);
-            if (res == null || res.commands == null) yield break;
+            if (res == null) yield break;
+            isPaused = res.paused;
+            if (res.commands == null) yield break;
             foreach (string cmd in res.commands)
             {
                 Execute(cmd, game);
@@ -157,5 +170,58 @@ public class RemoteControl : MonoBehaviour
                 RemoteInput.Press(KeyCode.RightArrow);
                 break;
         }
+    }
+
+    // ---- 休止中の表示 (お客さん用画面と同じデザイン) ----
+    private Font pauseFont;
+    private Texture2D backTex, panelTex, accentTex;
+    private GUIStyle titleStyle, subStyle;
+    private int styleHeight;
+
+    private static Texture2D MakeTex(Color c)
+    {
+        var tex = new Texture2D(1, 1);
+        tex.SetPixel(0, 0, c);
+        tex.Apply();
+        return tex;
+    }
+
+    private void OnGUI()
+    {
+        if (!isPaused) return;
+        GUI.depth = -1000;  // ゲームの UI より手前に描く
+
+        if (backTex == null)
+        {
+            backTex = MakeTex(new Color(0.03f, 0.04f, 0.055f, 0.94f));
+            panelTex = MakeTex(new Color(0.086f, 0.106f, 0.141f, 1f));   // #161b24
+            accentTex = MakeTex(new Color(0.353f, 0.663f, 0.902f, 1f));  // #5aa9e6
+            // 日本語を出すため Windows のフォントを使う
+            pauseFont = Font.CreateDynamicFontFromOSFont(new[] { "Yu Gothic UI", "Meiryo", "MS Gothic" }, 64);
+        }
+        int w = Screen.width, h = Screen.height;
+        if (titleStyle == null || styleHeight != h)
+        {
+            styleHeight = h;
+            titleStyle = new GUIStyle(GUI.skin.label)
+            {
+                font = pauseFont, fontSize = Mathf.RoundToInt(h * 0.085f),
+                fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter
+            };
+            titleStyle.normal.textColor = new Color(0.91f, 0.925f, 0.95f);
+            subStyle = new GUIStyle(titleStyle)
+            {
+                fontSize = Mathf.RoundToInt(h * 0.03f), fontStyle = FontStyle.Normal
+            };
+            subStyle.normal.textColor = new Color(0.54f, 0.58f, 0.65f);
+        }
+
+        GUI.DrawTexture(new Rect(0, 0, w, h), backTex);
+        float pw = Mathf.Min(w * 0.6f, h * 1.1f), ph = h * 0.38f;
+        float px = (w - pw) / 2f, py = (h - ph) / 2f;
+        GUI.DrawTexture(new Rect(px, py, pw, ph), panelTex);
+        GUI.DrawTexture(new Rect(px, py, pw, h * 0.008f), accentTex);
+        GUI.Label(new Rect(px, py + ph * 0.12f, pw, ph * 0.42f), "休 止 中", titleStyle);
+        GUI.Label(new Rect(px, py + ph * 0.55f, pw, ph * 0.35f), "ただいま休止しています。\nしばらくお待ちください。", subStyle);
     }
 }
