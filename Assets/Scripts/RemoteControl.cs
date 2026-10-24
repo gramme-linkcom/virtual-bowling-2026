@@ -172,7 +172,7 @@ public class RemoteControl : MonoBehaviour
         }
     }
 
-    // ---- 休止中の表示 (お客さん用画面と同じデザイン) ----
+    // ---- 休止中の表示 (白いパネルに黒い文字) ----
     private Font pauseFont;
     private Texture2D backTex, panelTex, accentTex;
     private GUIStyle titleStyle, subStyle;
@@ -193,8 +193,8 @@ public class RemoteControl : MonoBehaviour
 
         if (backTex == null)
         {
-            backTex = MakeTex(new Color(0.03f, 0.04f, 0.055f, 0.94f));
-            panelTex = MakeTex(new Color(0.086f, 0.106f, 0.141f, 1f));   // #161b24
+            backTex = MakeTex(new Color(0f, 0f, 0f, 0.6f));
+            panelTex = MakeTex(Color.white);
             accentTex = MakeTex(new Color(0.353f, 0.663f, 0.902f, 1f));  // #5aa9e6
             // 日本語を出すため Windows のフォントを使う
             pauseFont = Font.CreateDynamicFontFromOSFont(new[] { "Yu Gothic UI", "Meiryo", "MS Gothic" }, 64);
@@ -208,19 +208,19 @@ public class RemoteControl : MonoBehaviour
                 font = pauseFont, fontSize = Mathf.RoundToInt(h * 0.085f),
                 fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter
             };
-            titleStyle.normal.textColor = new Color(0.91f, 0.925f, 0.95f);
+            titleStyle.normal.textColor = new Color(0.08f, 0.09f, 0.11f);
             subStyle = new GUIStyle(titleStyle)
             {
-                fontSize = Mathf.RoundToInt(h * 0.03f), fontStyle = FontStyle.Normal
+                fontSize = Mathf.RoundToInt(h * 0.034f), fontStyle = FontStyle.Normal
             };
-            subStyle.normal.textColor = new Color(0.54f, 0.58f, 0.65f);
+            subStyle.normal.textColor = new Color(0.3f, 0.33f, 0.38f);
         }
 
         GUI.DrawTexture(new Rect(0, 0, w, h), backTex);
         float pw = Mathf.Min(w * 0.6f, h * 1.1f), ph = h * 0.38f;
         float px = (w - pw) / 2f, py = (h - ph) / 2f;
         GUI.DrawTexture(new Rect(px, py, pw, ph), panelTex);
-        GUI.DrawTexture(new Rect(px, py, pw, h * 0.008f), accentTex);
+        GUI.DrawTexture(new Rect(px, py, pw, h * 0.012f), accentTex);
         GUI.Label(new Rect(px, py + ph * 0.12f, pw, ph * 0.42f), "休 止 中", titleStyle);
         GUI.Label(new Rect(px, py + ph * 0.55f, pw, ph * 0.35f), "ただいま休止しています。\nしばらくお待ちください。", subStyle);
     }
